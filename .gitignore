@@ -1,8 +1,37 @@
-.next
-node_modules
-out
-dist
-.vercel
+# dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# production/build output
+dist/
+build/
+
+# generated code
+/app/generated/prisma/
+/types/
+
+# local env files
+.env*
+!.env.example
+
+# logs and diagnostics
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+coverage/
 preview-*.png
+
+# local tooling
+.vercel/
+.vscode/mcp.json
+*.tsbuildinfo
+
+# OS
 .DS_Store
+Thumbs.db

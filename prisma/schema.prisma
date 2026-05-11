@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum OrganizationType {
+  STARTUP
+  INVESTOR_FUND
+  ACCELERATOR_ENABLER
+  COMPANY_SUPPLY_CHAIN
+}
+
+enum StartupMemberRole {
+  OWNER
+  GUEST
+}
+
+model AccountUser {
+  id          String              @id @default(cuid())
+  googleSub   String?             @unique
+  email       String              @unique
+  name        String
+  picture     String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  memberships StartupMembership[]
+  invited     StartupMembership[] @relation("StartupMemberInviter")
+}
+
+model Startup {
+  id                   Int                 @id @default(autoincrement())
+  name                 String
+  category             String?
+  website              String?
+  operatingCountry     String?
+  operatingCoordinates String?
+  basedCountry         String?
+  basedCoordinates     String?
+  header               String
+  description          String?
+  tracks               String?
+  video                String?
+  image1               String?
+  image2               String?
+  image3               String?
+  image4               String?
+  impacto              String?
+  data1                String?
+  data2                String?
+  data3                String?
+  dataImage1           String?
+  dataImage2           String?
+  dataImage3           String?
+  quote                String?
+  quoteName            String?
+  quotePhoto           String?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  memberships          StartupMembership[]
+}
+
+model StartupMembership {
+  id          String            @id @default(cuid())
+  userId      String
+  startupId   Int
+  role        StartupMemberRole @default(GUEST)
+  invitedById String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  user      AccountUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startup   Startup      @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  invitedBy AccountUser? @relation("StartupMemberInviter", fields: [invitedById], references: [id], onDelete: SetNull)
+
+  @@unique([userId, startupId])
+  @@index([startupId, role])
+}
+
+model JoinSubmission {
+  id               Int              @id @default(autoincrement())
+  organizationType OrganizationType
+  payload          Json
+  createdAt        DateTime         @default(now())
+}

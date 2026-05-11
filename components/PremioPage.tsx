@@ -1,8 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { motion } from "framer-motion";
-import type { AuthUser } from "@/lib/types";
+import Link from "next/link";
+import { type CSSProperties, useEffect, useRef } from "react";
+import { AuthControls, StartupNavItem } from "./AuthControls";
+import { useAuth } from "./AuthProvider";
 
 const PRIZE_LEVELS = [
   {
@@ -10,77 +12,77 @@ const PRIZE_LEVELS = [
     label: "NIVEL 1",
     name: "Pionera Natura500",
     amount: "$5,000",
-    desc: "Soluciones en etapa temprana con prototipo funcional, piloto activo o solución en desarrollo.",
+    desc: "Para quienes apenas empiezan: prototipo funcional, piloto activo o solución en desarrollo.",
     tone: "#74ffda",
-    stage: "Etapa temprana"
+    stage: "Idea probada"
   },
   {
     id: "creciente",
     label: "NIVEL 2",
     name: "Creciente Natura500",
     amount: "$25,000",
-    desc: "Soluciones que muestran primeras ventas o tracción. El modelo funciona y está siendo probado en el mercado.",
+    desc: "Primeras ventas o tracción real. El modelo ya funciona y está vivo en el mercado.",
     tone: "#ebff57",
-    stage: "Tracción inicial"
+    stage: "Tracción en marcha"
   },
   {
     id: "lider",
     label: "NIVEL 3",
     name: "Líder Natura500",
     amount: "$100,000",
-    desc: "Soluciones con modelo demostrado, raíces comunitarias sólidas y potencial de impacto regional en LAC.",
+    desc: "Modelo demostrado, raíces comunitarias sólidas y capacidad de mover la aguja a escala regional.",
     tone: "#ffb14b",
-    stage: "Modelo demostrado"
+    stage: "Listas para escalar"
   }
 ] as const;
 
 const TIMELINE = [
   {
-    date: "Ahora",
-    title: "Pre-registro confirmado",
-    desc: "Tu startup forma parte del universo Natura500.",
+    date: "Hoy",
+    title: "Tu pre-registro está activo",
+    desc: "Lo que armes ahora se vuelve la primera lectura que hace el jurado.",
     state: "done"
   },
   {
-    date: "22 May 2026",
-    title: "Apertura de convocatoria",
-    desc: "Sube tu video de presentación al Radar.",
+    date: "22 may 2026",
+    title: "Abre la convocatoria",
+    desc: "El video corto entra al Radar y dispara la siguiente fase.",
     state: "next"
   },
   {
-    date: "15 Jul 2026",
-    title: "Cierre de envío de videos",
-    desc: "Fecha límite para ser considerado en la Fase 2.",
+    date: "15 jul 2026",
+    title: "Cierre de videos",
+    desc: "Después de esta fecha el jurado solo evalúa lo que ya entregaste.",
     state: "upcoming"
   },
   {
-    date: "Jul – Ago 2026",
-    title: "Revisión de registros",
-    desc: "El equipo de NTL y el Consejo CEIBA define la lista corta.",
+    date: "jul - ago 2026",
+    title: "Revisión del Consejo CEIBA",
+    desc: "NTL y CEIBA arman la lista corta con base en evidencia y ajuste regenerativo.",
     state: "upcoming"
   },
   {
-    date: "15 – 30 Ago 2026",
-    title: "Aplicación completa",
-    desc: "Las invitadas envían su aplicación detallada.",
+    date: "15 - 30 ago 2026",
+    title: "Aplicación final",
+    desc: "La lista corta entrega métricas, equipo y plan de uso de capital.",
     state: "upcoming"
   },
   {
-    date: "15 Sep 2026",
-    title: "Notificación a ganadoras",
-    desc: "Se notifica a las soluciones seleccionadas.",
+    date: "15 sep 2026",
+    title: "Resultados",
+    desc: "Las seleccionadas reciben la notificación oficial.",
     state: "upcoming"
   },
   {
-    date: "Oct 2026",
-    title: "Anuncio público — GET Forum del BID",
-    desc: "Las ganadoras se presentan ante la comunidad global.",
+    date: "oct 2026",
+    title: "Anuncio en GET Forum del BID",
+    desc: "El reconocimiento se entrega frente a la comunidad global.",
     state: "upcoming"
   },
   {
-    date: "Feb 2027",
-    title: "Masterclasses",
-    desc: "Activación de las 3 masterclasses para el Radar.",
+    date: "feb 2027",
+    title: "Masterclasses Natura500",
+    desc: "Tres sesiones para escalar capacidades técnicas y de mercado.",
     state: "upcoming"
   }
 ] as const;
@@ -95,29 +97,24 @@ const SELECTION_QUESTIONS = [
 
 const BENEFITS = [
   {
-    icon: "🌐",
+    label: "Radar",
     title: "Perfil público en el Radar",
-    desc: "Visibilidad en 500.naturatech.org — la plataforma que portafolios e inversionistas consultan."
+    desc: "Visibilidad en 500.naturatech.org, la plataforma que portafolios e inversionistas consultan."
   },
   {
-    icon: "🎓",
+    label: "Clases",
     title: "3 Masterclasses exclusivas",
     desc: "EUDR para exportación, due diligence en biotech, IA aplicada a bioinnovación."
   },
   {
-    icon: "🌎",
+    label: "Foros",
     title: "Escenarios internacionales",
     desc: "Acceso a foros globales de biodiversidad y finanzas climáticas con NaturaTech LAC."
   },
   {
-    icon: "🤝",
+    label: "Red",
     title: "Red de sistemas asociativos",
     desc: "Conexión bioregional con productores, compradores, fondos y aceleradoras."
-  },
-  {
-    icon: "🏆",
-    title: "Acceso al Premio",
-    desc: "Eres parte del universo del que se selecciona la lista corta del Premio Natura500."
   }
 ];
 
@@ -140,438 +137,833 @@ const ELIGIBLE_COUNTRIES = [
 ];
 
 const ELIGIBLE_TYPES = [
-  { icon: "🚀", title: "Startups Nature-Tech", desc: "Climate-tech, biotech y bioinnovación listas para escalar." },
-  { icon: "🏢", title: "PyMEs con propósito", desc: "Modelos de negocio alineados con regeneración." },
-  { icon: "💚", title: "Empresas sociales", desc: "B-Corps y modelos con impacto socioambiental." },
-  { icon: "🌾", title: "Cooperativas", desc: "Organizaciones de productores y productoras." },
-  { icon: "🌳", title: "Comunitarias", desc: "Indígenas, afrodescendientes y consejos comunitarios." }
+  { label: "001", title: "Startups Nature-Tech", desc: "Climate-tech, biotech y bioinnovación listas para escalar." },
+  { label: "002", title: "PyMEs con propósito", desc: "Modelos de negocio alineados con regeneración." },
+  { label: "003", title: "Empresas sociales", desc: "B-Corps y modelos con impacto socioambiental." },
+  { label: "004", title: "Cooperativas", desc: "Organizaciones de productores y productoras." },
+  { label: "005", title: "Comunitarias", desc: "Indígenas, afrodescendientes y consejos comunitarios." }
 ];
 
-const smoothEase = [0.22, 1, 0.36, 1] as const;
+const ROUTE_CARDS = [
+  {
+    num: "01",
+    title: "Perfil en Radar",
+    date: "Ahora",
+    desc: "Completa narrativa, territorio, tracks, imágenes y evidencia básica.",
+    accent: "#74ffda",
+    image: "/assets/01.webp"
+  },
+  {
+    num: "02",
+    title: "Video corto",
+    date: "22 mayo - 15 julio",
+    desc: "Al abrir convocatoria, sube una presentación clara de problema, solución e impacto.",
+    accent: "#ebff57",
+    image: "/assets/05.webp"
+  },
+  {
+    num: "03",
+    title: "Revisión CEIBA",
+    date: "jul - ago 2026",
+    desc: "NTL y el Consejo CEIBA revisan elegibilidad, evidencia y ajuste regenerativo.",
+    accent: "#ffb14b",
+    image: "/assets/04.webp"
+  },
+  {
+    num: "04",
+    title: "Aplicación final",
+    date: "15 - 30 ago",
+    desc: "La lista corta envía detalles operativos, métricas, equipo y uso de recursos.",
+    accent: "#74ffda",
+    image: "/assets/02.webp"
+  },
+  {
+    num: "05",
+    title: "Ganadoras",
+    date: "sep 2026 - feb 2027",
+    desc: "Notificación, anuncio público en GET Forum y activación de masterclasses.",
+    accent: "#ebff57",
+    image: "/assets/06.webp"
+  }
+];
 
-const fadeUp = {
-  initial: { opacity: 0, y: 28 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, amount: 0.3 },
-  transition: { duration: 0.6, ease: smoothEase }
-};
+const HERO_FACTS = [
+  { label: "Abre la convocatoria", value: "22 may · 2026" },
+  { label: "Reconocimiento", value: "$5K → $100K" },
+  { label: "Territorio elegible", value: "26 países LAC" }
+];
+
+const COLLAGE_IMAGES = ["/assets/01.webp", "/assets/03.webp", "/assets/04.webp"];
+const HERO_MEDIA = [
+  { src: "/assets/03.webp", label: "Biodiversidad" },
+  { src: "/assets/05.webp", label: "Evidencia" },
+  { src: "/assets/02.webp", label: "Territorio" }
+] as const;
+const MARQUEE_ITEMS = ["Premio Natura500", "Biodiversidad", "Capital", "Radar", "LAC"];
+const PRIMARY_CRITERIA = EVALUATION_CRITERIA.slice(0, 4);
+const SECONDARY_CRITERIA = EVALUATION_CRITERIA.slice(4);
+
+type CssVars = CSSProperties & Record<`--${string}`, string | number>;
 
 export function PremioPage() {
-  const user: AuthUser | null = {
-    name: "Bryan",
-    email: "bryan@cminds.co",
-    picture: "/assets/01.webp",
-    startup: "RushFrame"
-  };
-
-  const today = new Date(2026, 3, 30);
+  const rootRef = useRef<HTMLElement>(null);
+  const { user } = useAuth();
+  const activeStartup = user?.activeStartup;
+  const startupInitial = activeStartup?.name.charAt(0).toUpperCase() || "S";
   const opening = new Date(2026, 4, 22);
   const daysToOpen = Math.max(
     0,
-    Math.ceil((opening.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    Math.ceil((opening.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
   );
 
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    let cleanup = () => undefined;
+    let cancelled = false;
+
+    Promise.all([import("gsap"), import("gsap/ScrollTrigger")]).then(([gsapModule, scrollTriggerModule]) => {
+      if (cancelled || !rootRef.current) return;
+      const { gsap } = gsapModule;
+      const { ScrollTrigger } = scrollTriggerModule;
+
+      gsap.registerPlugin(ScrollTrigger);
+      ScrollTrigger.config({ ignoreMobileResize: true });
+
+      let detachRailWheel: (() => void) | undefined;
+      const ctx = gsap.context(() => {
+        gsap.set(
+          [
+            ".award-bg__glow",
+            ".award-orbit",
+            ".award-orbit__ring",
+            ".award-orbit__logo",
+            ".award-hero-panel",
+            ".award-hero-panel__prize",
+            ".award-hero-panel__status",
+            ".award-photo-card",
+            ".award-route-card",
+            ".award-level",
+            ".award-collage__item",
+            ".award-facts article",
+            "[data-award-title-word]"
+          ],
+          {
+            force3D: true,
+            transformOrigin: "50% 50%",
+            willChange: "transform, opacity"
+          }
+        );
+
+        gsap.from("[data-award-hero]", {
+          autoAlpha: 0,
+          y: 22,
+          scale: 0.985,
+          duration: 0.82,
+          stagger: 0.075,
+          ease: "power3.out",
+          clearProps: "willChange"
+        });
+
+        gsap.from("[data-award-title-word]", {
+          autoAlpha: 0,
+          yPercent: 115,
+          rotate: 3,
+          duration: 0.95,
+          stagger: 0.085,
+          ease: "power4.out",
+          clearProps: "transform,opacity,visibility"
+        });
+
+        gsap.from(".award-photo-card", {
+          clipPath: "inset(100% 0% 0% 0%)",
+          y: 56,
+          scale: 0.96,
+          duration: 1.05,
+          stagger: 0.12,
+          ease: "power4.out",
+          clearProps: "clipPath,transform"
+        });
+
+        gsap.to(".award-photo-card img", {
+          yPercent: -8,
+          scale: 1.08,
+          ease: "none",
+          scrollTrigger: {
+            trigger: ".award-hero",
+            start: "top top",
+            end: "bottom top",
+            scrub: 0.7
+          }
+        });
+
+        gsap.to(".award-marquee__track", {
+          xPercent: -50,
+          duration: 26,
+          repeat: -1,
+          ease: "none"
+        });
+
+        gsap.utils.toArray<HTMLElement>("[data-award-reveal]").forEach(element => {
+          gsap.from(element, {
+            autoAlpha: 0,
+            y: 28,
+            scale: 0.992,
+            duration: 0.82,
+            ease: "power3.out",
+            clearProps: "willChange",
+            scrollTrigger: {
+              trigger: element,
+              start: "top 84%",
+              toggleActions: "play none none reverse"
+            }
+          });
+        });
+
+        gsap.utils.toArray<HTMLElement>("[data-award-stagger]").forEach(group => {
+          const items = gsap.utils.toArray<HTMLElement>("[data-award-item]", group);
+          if (!items.length) return;
+          gsap.from(items, {
+            autoAlpha: 0,
+            y: 20,
+            duration: 0.62,
+            stagger: 0.055,
+            ease: "power3.out",
+            clearProps: "transform,opacity,visibility",
+            scrollTrigger: {
+              trigger: group,
+              start: "top 82%"
+            }
+          });
+        });
+
+        gsap.utils.toArray<HTMLElement>("[data-award-bar]").forEach(bar => {
+          gsap.fromTo(
+            bar,
+            { scaleX: 0 },
+            {
+              scaleX: 1,
+              duration: 0.9,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: bar,
+                start: "top 88%"
+              }
+            }
+          );
+        });
+
+        const levelsSection = root.querySelector<HTMLElement>("[data-award-levels]");
+        if (levelsSection) {
+          const levelTitle = levelsSection.querySelector<HTMLElement>("[data-award-level-title]");
+          const levelCards = gsap.utils.toArray<HTMLElement>("[data-award-level-card]", levelsSection);
+
+          if (levelTitle) {
+            gsap.fromTo(
+              levelTitle,
+              { autoAlpha: 0, y: 42, scale: 0.96 },
+              {
+                autoAlpha: 1,
+                y: 0,
+                scale: 1,
+                duration: 0.9,
+                ease: "power4.out",
+                scrollTrigger: {
+                  trigger: levelsSection,
+                  start: "top 78%"
+                }
+              }
+            );
+
+            gsap.to(levelTitle, {
+              yPercent: -10,
+              ease: "none",
+              scrollTrigger: {
+                trigger: levelsSection,
+                start: "top bottom",
+                end: "bottom top",
+                scrub: 0.75
+              }
+            });
+          }
+
+          if (levelCards.length) {
+            gsap.fromTo(
+              levelCards,
+              { autoAlpha: 0, y: 54, scale: 0.965 },
+              {
+                autoAlpha: 1,
+                y: 0,
+                scale: 1,
+                duration: 0.86,
+                stagger: 0.1,
+                ease: "power4.out",
+                scrollTrigger: {
+                  trigger: levelsSection,
+                  start: "top 72%"
+                }
+              }
+            );
+
+            gsap.to(levelCards, {
+              y: (index: number) => (index - 1) * -18,
+              ease: "none",
+              scrollTrigger: {
+                trigger: levelsSection,
+                start: "top bottom",
+                end: "bottom top",
+                scrub: 0.9
+              }
+            });
+          }
+        }
+
+        const rail = root.querySelector<HTMLElement>("[data-award-rail]");
+
+        const routeSection = root.querySelector<HTMLElement>("[data-award-route]");
+        const routeCards = gsap.utils.toArray<HTMLElement>(".award-route-card");
+        const routeDots = gsap.utils.toArray<HTMLElement>("[data-award-route-dot]");
+        const setActiveRouteCard = (index: number) => {
+          routeCards.forEach((card, cardIndex) => card.classList.toggle("is-active", cardIndex === index));
+          routeDots.forEach((dot, dotIndex) => dot.classList.toggle("is-active", dotIndex === index));
+          routeSection?.style.setProperty("--award-route-progress", `${routeCards.length > 1 ? index / (routeCards.length - 1) : 0}`);
+        };
+        setActiveRouteCard(0);
+
+        if (rail && routeCards.length) {
+          const isPinnedRoute = window.matchMedia("(min-width: 961px)").matches;
+          const updateActiveFromNativeScroll = () => {
+            const maxScroll = Math.max(1, rail.scrollWidth - rail.clientWidth);
+            const progress = rail.scrollLeft / maxScroll;
+            const activeIndex = Math.min(
+              routeCards.length - 1,
+              Math.max(0, Math.round(progress * (routeCards.length - 1)))
+            );
+            setActiveRouteCard(activeIndex);
+            routeSection?.style.setProperty("--award-route-progress", `${progress}`);
+          };
+          const getRouteScrollDistance = () => Math.max(0, rail.scrollWidth - rail.clientWidth);
+          if (routeSection && isPinnedRoute) {
+            ScrollTrigger.create({
+              trigger: routeSection,
+              start: "top 84px",
+              end: () => `+=${Math.max(1, getRouteScrollDistance())}`,
+              pin: true,
+              scrub: 1.05,
+              anticipatePin: 1,
+              invalidateOnRefresh: true,
+              onEnter: () => {
+                rail.scrollLeft = 0;
+                updateActiveFromNativeScroll();
+              },
+              onUpdate: self => {
+                rail.scrollLeft = getRouteScrollDistance() * self.progress;
+                updateActiveFromNativeScroll();
+              },
+              onRefresh: updateActiveFromNativeScroll
+            });
+          }
+          const handleRailWheel = (event: WheelEvent) => {
+            if (isPinnedRoute) return;
+            if (event.ctrlKey || event.metaKey || rail.scrollWidth <= rail.clientWidth) return;
+
+            const dominantDelta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+            const maxScroll = rail.scrollWidth - rail.clientWidth;
+            const nextScrollLeft = Math.max(0, Math.min(maxScroll, rail.scrollLeft + dominantDelta));
+            const canMove = Math.abs(nextScrollLeft - rail.scrollLeft) > 0.5;
+
+            if (!canMove) return;
+            event.preventDefault();
+            rail.scrollLeft = nextScrollLeft;
+          };
+          let isDraggingRail = false;
+          let dragStartX = 0;
+          let dragStartScrollLeft = 0;
+          const stopRailDrag = (event?: PointerEvent) => {
+            if (!isDraggingRail) return;
+            isDraggingRail = false;
+            rail.classList.remove("is-dragging");
+            if (event && rail.hasPointerCapture(event.pointerId)) rail.releasePointerCapture(event.pointerId);
+          };
+          const handleRailPointerDown = (event: PointerEvent) => {
+            if (event.button !== 0 || rail.scrollWidth <= rail.clientWidth) return;
+            isDraggingRail = true;
+            dragStartX = event.clientX;
+            dragStartScrollLeft = rail.scrollLeft;
+            rail.classList.add("is-dragging");
+            rail.setPointerCapture(event.pointerId);
+          };
+          const handleRailPointerMove = (event: PointerEvent) => {
+            if (!isDraggingRail) return;
+            event.preventDefault();
+            rail.scrollLeft = dragStartScrollLeft - (event.clientX - dragStartX);
+          };
+          const handleRailKeyDown = (event: KeyboardEvent) => {
+            const firstCard = routeCards[0];
+            const step = firstCard ? firstCard.offsetWidth + 18 : rail.clientWidth * 0.72;
+            if (event.key === "ArrowRight") {
+              event.preventDefault();
+              rail.scrollBy({ left: step, behavior: "smooth" });
+            } else if (event.key === "ArrowLeft") {
+              event.preventDefault();
+              rail.scrollBy({ left: -step, behavior: "smooth" });
+            } else if (event.key === "Home") {
+              event.preventDefault();
+              rail.scrollTo({ left: 0, behavior: "smooth" });
+            } else if (event.key === "End") {
+              event.preventDefault();
+              rail.scrollTo({ left: rail.scrollWidth, behavior: "smooth" });
+            }
+          };
+          rail.addEventListener("scroll", updateActiveFromNativeScroll, { passive: true });
+          rail.addEventListener("wheel", handleRailWheel, { passive: false });
+          rail.addEventListener("pointerdown", handleRailPointerDown);
+          rail.addEventListener("pointermove", handleRailPointerMove);
+          rail.addEventListener("pointerup", stopRailDrag);
+          rail.addEventListener("pointercancel", stopRailDrag);
+          rail.addEventListener("lostpointercapture", stopRailDrag);
+          rail.addEventListener("keydown", handleRailKeyDown);
+          const previousDetach = detachRailWheel;
+          detachRailWheel = () => {
+            previousDetach?.();
+            rail.removeEventListener("scroll", updateActiveFromNativeScroll);
+            rail.removeEventListener("wheel", handleRailWheel);
+            rail.removeEventListener("pointerdown", handleRailPointerDown);
+            rail.removeEventListener("pointermove", handleRailPointerMove);
+            rail.removeEventListener("pointerup", stopRailDrag);
+            rail.removeEventListener("pointercancel", stopRailDrag);
+            rail.removeEventListener("lostpointercapture", stopRailDrag);
+            rail.removeEventListener("keydown", handleRailKeyDown);
+          };
+        }
+
+        gsap.to(".award-bg__glow--lime", {
+          x: "4vw",
+          y: "3vh",
+          scale: 1.08,
+          duration: 9,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut"
+        });
+        gsap.to(".award-bg__glow--cyan", {
+          x: "-3vw",
+          y: "-2vh",
+          scale: 0.92,
+          duration: 11,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut"
+        });
+        gsap.to(".award-orbit__ring--outer", { rotate: 360, duration: 64, repeat: -1, ease: "none" });
+        gsap.to(".award-orbit__ring--inner", { rotate: -360, duration: 50, repeat: -1, ease: "none" });
+        gsap.to(".award-orbit__logo", {
+          y: -7,
+          scale: 1.025,
+          duration: 2.7,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut"
+        });
+        gsap.to(".award-hero-panel__prize", {
+          y: -4,
+          duration: 3.4,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut"
+        });
+        gsap.to(".award-status__avatar", {
+          y: -5,
+          duration: 3.8,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut"
+        });
+        gsap.to(".award-facts article", {
+          y: -4,
+          duration: 3.1,
+          repeat: -1,
+          yoyo: true,
+          stagger: 0.22,
+          ease: "sine.inOut"
+        });
+        gsap.to(".award-collage__item", {
+          y: (index: number) => (index % 2 === 0 ? -9 : 7),
+          rotate: (index: number) => (index % 2 === 0 ? "-=0.8" : "+=0.8"),
+          duration: 4.2,
+          repeat: -1,
+          yoyo: true,
+          stagger: 0.18,
+          ease: "sine.inOut"
+        });
+        gsap.to(".award-status__pill span, .award-timeline__list li.is-next .award-timeline__dot", {
+          scale: 1.55,
+          opacity: 0.55,
+          duration: 1.25,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut"
+        });
+
+        const orbit = root.querySelector<HTMLElement>(".award-orbit");
+        if (orbit) {
+          const moveX = gsap.quickTo(orbit, "x", { duration: 0.45, ease: "power3.out" });
+          const moveY = gsap.quickTo(orbit, "y", { duration: 0.45, ease: "power3.out" });
+          const handlePointerMove = (event: PointerEvent) => {
+            moveX((event.clientX / window.innerWidth - 0.5) * 18);
+            moveY((event.clientY / window.innerHeight - 0.5) * 14);
+          };
+          window.addEventListener("pointermove", handlePointerMove, { passive: true });
+          const previousDetach = detachRailWheel;
+          detachRailWheel = () => {
+            previousDetach?.();
+            window.removeEventListener("pointermove", handlePointerMove);
+          };
+        }
+
+        gsap.utils.toArray<HTMLElement>("[data-award-parallax]").forEach(element => {
+          const speed = Number(element.dataset.speed ?? 0.08);
+          gsap.to(element, {
+            y: () => window.innerHeight * speed,
+            ease: "none",
+            scrollTrigger: {
+              trigger: root,
+              start: "top top",
+              end: "bottom top",
+              scrub: 0.8
+            }
+          });
+        });
+
+        const refresh = window.setTimeout(() => ScrollTrigger.refresh(), 180);
+        cleanup = () => {
+          window.clearTimeout(refresh);
+          detachRailWheel?.();
+          ctx.revert();
+        };
+      }, root);
+    });
+
+    return () => {
+      cancelled = true;
+      cleanup();
+    };
+  }, []);
+
   return (
-    <main className="px-shell">
-      {/* ── Topbar ── */}
+    <main ref={rootRef} className="award-shell award-shell--editorial">
       <header className="topbar px-topbar" aria-label="Navegación principal">
-        <a className="brand-mark" href="/" aria-label="500 explorar">
-          <Image src="/assets/programs-logos/500.svg" alt="500" width={88} height={36} priority />
-        </a>
+        <Link className="brand-mark" href="/" aria-label="500 explorar">
+          <Image src="/assets/programs-logos/500.svg" alt="500" width={48} height={20} priority />
+        </Link>
         <div className="topbar-divider" aria-hidden="true" />
         <nav className="topbar-nav">
-          <a className="nav-item" href="/">
+          <Link className="nav-item" href="/">
             <Image src="/icons/explore.svg" alt="" width={14} height={16} />
             <span>Explorar</span>
-          </a>
-          <a className="nav-item" href="/conexiones">
+          </Link>
+          <Link className="nav-item" href="/conexiones">
             <span>Conexiones</span>
-          </a>
-          <a className="nav-item is-active" href="/premio">
+            <b className="nav-ai-badge">AI</b>
+          </Link>
+          <Link className="nav-item is-active" href="/premio">
             <span>Premio</span>
-          </a>
-          {user ? (
-            <a className="nav-item nav-item--startup" href="/studio">
-              <span>{user.startup}</span>
-            </a>
-          ) : null}
+          </Link>
+          <StartupNavItem />
         </nav>
         <div className="topbar-end">
-          {user ? (
-            <div className="user-badge">
-              <div className="user-badge__inner">
-                <span className="user-badge__avatar">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={user.picture} alt="" referrerPolicy="no-referrer" />
-                </span>
-                <span className="user-badge__name">{user.name}</span>
-              </div>
-            </div>
-          ) : (
-            <a className="login-button" href="/">Iniciar Sesión</a>
-          )}
+          <AuthControls />
         </div>
       </header>
 
-      {/* ── Page background flora ── */}
-      <div className="px-bg" aria-hidden="true">
-        <div className="px-bg__glow" />
-        <div className="px-bg__grid" />
+      <div className="award-bg" aria-hidden="true">
+        <span className="award-bg__glow award-bg__glow--lime" />
+        <span className="award-bg__glow award-bg__glow--cyan" />
+        <span className="award-bg__grid" />
       </div>
 
-      <div className="px-body">
-        {/* ── Page header ── */}
-        <motion.div
-          className="px-pagehead"
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <span className="px-eyebrow">PREMIO · 2026</span>
-          <h1 className="px-h1">
-            Premio <span className="px-h1__accent">Natura500</span>
+      <section id="natura500" className="award-hero" aria-labelledby="award-title">
+        <div className="award-hero__copy" data-award-hero>
+          <span className="award-kicker">Premio Natura500 · 2026</span>
+          <h1 id="award-title" className="award-editorial-title">
+            <span><span data-award-title-word>Capital</span></span>
+            <span><span data-award-title-word>para soluciones</span></span>
+            <span><span data-award-title-word>regenerativas.</span></span>
           </h1>
-          <p className="px-lede">
-            Reconocimiento monetario por niveles para iniciativas regenerativas con mayor potencial de impacto en América Latina y el Caribe.
+          <p>
+            Tres niveles de reconocimiento para quienes ya están construyendo impacto real en biodiversidad, clima y comunidades de LAC. Nada de promesas — evidencia.
           </p>
-        </motion.div>
-
-        {/* ── Participación / status hero ── */}
-        {user ? (
-          <motion.section
-            className="px-status"
-            initial={{ opacity: 0, y: 24, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-            aria-labelledby="px-status-title"
-          >
-            <div className="px-status__decor" aria-hidden="true">
-              <span className="px-status__orb" />
-              <span className="px-status__ring" />
-            </div>
-
-            <div className="px-status__head">
-              <span className="px-status__pill">
-                <span className="px-status__dot" /> Pre-registrado
-              </span>
-              <span className="px-status__count">
-                <strong>{daysToOpen}</strong> días para que abra la convocatoria
-              </span>
-            </div>
-
-            <div className="px-status__main">
-              <span className="px-status__avatar">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={user.picture} alt="" referrerPolicy="no-referrer" />
-                <span className="px-status__check" aria-hidden="true">
-                  <svg viewBox="0 0 16 16" width="14" height="14">
-                    <path
-                      d="M3 8.5l3 3 7-7"
-                      fill="none"
-                      stroke="#07100a"
-                      strokeWidth="2.4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
-              </span>
-
-              <div className="px-status__text">
-                <p className="px-status__kicker">
-                  HOLA, <strong>{user.startup.toUpperCase()}</strong>
-                </p>
-                <h2 id="px-status-title" className="px-status__title">
-                  Ya estás <span className="px-status__title-accent">participando</span>
-                </h2>
-                <p className="px-status__copy">
-                  Tu startup forma parte del universo del que se selecciona la lista corta del Premio Natura500 2026. Cuando abra la convocatoria, te avisaremos para subir tu video de presentación.
-                </p>
-              </div>
-            </div>
-
-            <div className="px-status__steps">
-              <div className="px-status__step is-done">
-                <span className="px-status__step-num">1</span>
-                <div>
-                  <strong>Cuenta registrada</strong>
-                  <p>Listo. Tu perfil ya existe en el ecosistema.</p>
-                </div>
-              </div>
-              <div className="px-status__step is-current">
-                <span className="px-status__step-num">2</span>
-                <div>
-                  <strong>Mejora tu perfil</strong>
-                  <p>Sube fotos, métricas y completa secciones clave.</p>
-                </div>
-              </div>
-              <div className="px-status__step">
-                <span className="px-status__step-num">3</span>
-                <div>
-                  <strong>Sube tu video</strong>
-                  <p>Del 22 de mayo al 15 de julio para ser considerado.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="px-status__ctas">
-              <a className="px-cta px-cta--primary" href="/conexiones">
-                Mejorar mi perfil con IA
-                <span aria-hidden="true">→</span>
-              </a>
-              <a className="px-cta px-cta--ghost" href="#cronograma">
-                Ver cronograma completo
-              </a>
-            </div>
-          </motion.section>
-        ) : (
-          <motion.section className="px-status px-status--guest" {...fadeUp}>
-            <h2 className="px-status__title">Registra tu startup para participar</h2>
-            <p className="px-status__copy">
-              Inicia sesión y entra automáticamente al universo Natura500.
-            </p>
-            <a className="px-cta px-cta--primary" href="/">
-              Iniciar Sesión
-              <span aria-hidden="true">→</span>
+          <div className="award-actions">
+            <Link className="award-button award-button--primary" href={activeStartup ? "/studio" : "/onboarding?mode=create&redirect=%2Fstudio"}>
+              {activeStartup ? "Preparar perfil" : "Registrar startup"}
+            </Link>
+            <a className="award-button award-button--secondary" href="#ruta">
+              Ver proceso
             </a>
-          </motion.section>
-        )}
+          </div>
+        </div>
 
-        {/* ── Niveles del premio ── */}
-        <motion.section className="px-section" {...fadeUp}>
-          <header className="px-section__head">
-            <span className="px-section__eyebrow">RECONOCIMIENTO</span>
-            <h2 className="px-section__title">Tres niveles, un mismo ecosistema</h2>
-            <p className="px-section__lede">
-              Diseñados para que una cooperativa comunitaria temprana compita en igualdad de condiciones con una empresa con tracción.
-            </p>
-          </header>
-
-          <div className="px-prizes">
-            {PRIZE_LEVELS.map((level, i) => (
-              <motion.article
-                key={level.id}
-                className="px-prize"
-                style={{ "--prize-tone": level.tone } as React.CSSProperties}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{
-                  duration: 0.55,
-                  delay: 0.08 * i,
-                  ease: [0.22, 1, 0.36, 1]
-                }}
-              >
-                <div className="px-prize__head">
-                  <span className="px-prize__label">{level.label}</span>
-                  <span className="px-prize__stage">{level.stage}</span>
-                </div>
-                <strong className="px-prize__amount">USD {level.amount}</strong>
-                <p className="px-prize__name">{level.name}</p>
-                <p className="px-prize__desc">{level.desc}</p>
-                <div className="px-prize__glow" aria-hidden="true" />
-              </motion.article>
+        <div className="award-hero__visual" data-award-hero data-award-parallax data-speed="0.035">
+          <div className="award-editorial-photos" aria-hidden="true">
+            {HERO_MEDIA.map((image, index) => (
+              <figure key={image.src} className={`award-photo-card award-photo-card--${index + 1}`}>
+                <Image src={image.src} alt="" fill sizes="(max-width: 900px) 70vw, 28vw" priority={index === 0} />
+                <figcaption>{image.label}</figcaption>
+              </figure>
             ))}
           </div>
-        </motion.section>
-
-        {/* ── Cronograma ── */}
-        <motion.section className="px-section" id="cronograma" {...fadeUp}>
-          <header className="px-section__head">
-            <span className="px-section__eyebrow">PROCESO</span>
-            <h2 className="px-section__title">Cronograma 2026 – 2027</h2>
-            <p className="px-section__lede">
-              Las ganadoras se anuncian en el GET Forum del BID — uno de los principales escenarios globales de finanzas para el desarrollo.
-            </p>
-          </header>
-
-          <ol className="px-timeline">
-            {TIMELINE.map((step, i) => (
-              <motion.li
-                key={step.title}
-                className={`px-timeline__item is-${step.state}`}
-                initial={{ opacity: 0, x: -16 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{
-                  duration: 0.5,
-                  delay: 0.05 * i,
-                  ease: [0.22, 1, 0.36, 1]
-                }}
-              >
-                <span className="px-timeline__dot" aria-hidden="true" />
-                <div className="px-timeline__content">
-                  <span className="px-timeline__date">{step.date}</span>
-                  <strong className="px-timeline__title">{step.title}</strong>
-                  <p className="px-timeline__desc">{step.desc}</p>
-                </div>
-              </motion.li>
-            ))}
-          </ol>
-        </motion.section>
-
-        {/* ── Criterios de selección (5 preguntas) ── */}
-        <motion.section className="px-section" {...fadeUp}>
-          <header className="px-section__head">
-            <span className="px-section__eyebrow">FILTRO</span>
-            <h2 className="px-section__title">5 preguntas que definen la selección</h2>
-            <p className="px-section__lede">
-              La selección busca diversidad territorial, de etapa y de tipo de organización en la región.
-            </p>
-          </header>
-
-          <div className="px-questions">
-            {SELECTION_QUESTIONS.map((q, i) => (
-              <motion.div
-                key={i}
-                className="px-question"
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{
-                  duration: 0.5,
-                  delay: 0.06 * i,
-                  ease: [0.22, 1, 0.36, 1]
-                }}
-              >
-                <span className="px-question__num">0{i + 1}</span>
-                <p className="px-question__text">{q}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.section>
-
-        {/* ── Beneficios ── */}
-        <motion.section className="px-section" {...fadeUp}>
-          <header className="px-section__head">
-            <span className="px-section__eyebrow">QUE INCLUYE</span>
-            <h2 className="px-section__title">Beneficios al estar registrado</h2>
-            <p className="px-section__lede">
-              Independientemente de si avanzas al Premio, recibes acceso al ecosistema completo de NaturaTech LAC.
-            </p>
-          </header>
-
-          <div className="px-benefits">
-            {BENEFITS.map((b, i) => (
-              <motion.div
-                key={b.title}
-                className="px-benefit"
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{ duration: 0.5, delay: 0.06 * i, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <span className="px-benefit__icon">{b.icon}</span>
-                <strong className="px-benefit__title">{b.title}</strong>
-                <p className="px-benefit__desc">{b.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.section>
-
-        {/* ── Criterios de evaluación ponderados ── */}
-        <motion.section className="px-section" {...fadeUp}>
-          <header className="px-section__head">
-            <span className="px-section__eyebrow">EVALUACIÓN</span>
-            <h2 className="px-section__title">Cómo se evalúan las propuestas</h2>
-            <p className="px-section__lede">
-              Ocho criterios ponderados que privilegian impacto, ética e inclusividad.
-            </p>
-          </header>
-
-          <div className="px-criteria">
-            {EVALUATION_CRITERIA.map((c, i) => (
-              <motion.div
-                key={c.name}
-                className="px-criterion"
-                initial={{ opacity: 0, y: 14 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{ duration: 0.5, delay: 0.04 * i, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <div className="px-criterion__top">
-                  <strong className="px-criterion__name">{c.name}</strong>
-                  <span className="px-criterion__weight">{c.weight}%</span>
-                </div>
-                <div className="px-criterion__bar" aria-hidden="true">
-                  <motion.span
-                    className="px-criterion__fill"
-                    initial={{ width: 0 }}
-                    whileInView={{ width: `${c.weight * 5}%` }}
-                    viewport={{ once: true, amount: 0.3 }}
-                    transition={{ duration: 0.9, delay: 0.1 + 0.04 * i, ease: [0.22, 1, 0.36, 1] }}
-                  />
-                </div>
-                <p className="px-criterion__desc">{c.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.section>
-
-        {/* ── Elegibilidad ── */}
-        <motion.section className="px-section" {...fadeUp}>
-          <header className="px-section__head">
-            <span className="px-section__eyebrow">ELEGIBILIDAD</span>
-            <h2 className="px-section__title">¿Tu organización aplica?</h2>
-            <p className="px-section__lede">
-              Registradas y operando en uno de los 26 países prestatarios del BID, con composición mayoritariamente LAC.
-            </p>
-          </header>
-
-          <div className="px-elig">
-            <div className="px-elig__col">
-              <h3 className="px-elig__h3">Tipos de organización</h3>
-              <div className="px-types">
-                {ELIGIBLE_TYPES.map(t => (
-                  <div key={t.title} className="px-type">
-                    <span className="px-type__icon">{t.icon}</span>
-                    <div>
-                      <strong>{t.title}</strong>
-                      <p>{t.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="px-elig__col">
-              <h3 className="px-elig__h3">26 países LAC elegibles</h3>
-              <div className="px-countries">
-                {ELIGIBLE_COUNTRIES.map(c => (
-                  <span key={c} className="px-country">{c}</span>
-                ))}
-              </div>
-              <div className="px-elig__notes">
-                <p>
-                  <strong>50%+</strong> de fundadores nacionales LAC.
-                </p>
-                <p>
-                  <strong>70%+</strong> del equipo directivo y operativo LAC.
-                </p>
-                <p>Equidad de género activamente promovida.</p>
-              </div>
+          <div className="award-orbit award-orbit--editorial" aria-hidden="true">
+            <span className="award-orbit__ring award-orbit__ring--outer" />
+            <span className="award-orbit__ring award-orbit__ring--inner" />
+            <div className="award-orbit__logo">
+              <Image src="/500svg.svg" alt="" width={188} height={86} priority />
             </div>
           </div>
-        </motion.section>
+        </div>
 
-        {/* ── Footer / partners ── */}
-        <motion.section className="px-foot" {...fadeUp}>
-          <p className="px-foot__line">
-            <strong>Natura500</strong> es una línea de acción de NaturaTech LAC, la iniciativa que escala la infraestructura para el ecosistema regenerativo de LAC.
-          </p>
-          <div className="px-foot__partners">
-            <span>BID Lab</span>
-            <span>·</span>
-            <span>C Minds</span>
-            <span>·</span>
-            <span>Asdi (Suecia)</span>
-            <span>·</span>
-            <span>Climate Collective</span>
-            <span>·</span>
-            <span>Amazonía Siempre</span>
+        <aside className="award-hero-panel" data-award-hero aria-label="Estado de preparación para el premio">
+          <div className="award-hero-panel__prize">
+            <span>Hasta</span>
+            <strong>USD $100,000</strong>
+            <p>Reservado para Líder Natura500. Tres niveles antes de eso.</p>
           </div>
-        </motion.section>
-      </div>
+
+          <div className="award-hero-panel__status">
+            <span className="award-status__pill">
+              <span /> {activeStartup ? "Listo en el Radar" : "Empieza por el perfil"}
+            </span>
+            <div className="award-status__startup">
+              <span className="award-status__avatar">{startupInitial}</span>
+              <div>
+                <small>{activeStartup ? "Tu startup" : "Tu siguiente paso"}</small>
+                <strong>{activeStartup?.name ?? "Crea tu perfil público"}</strong>
+              </div>
+            </div>
+            <p>
+              {activeStartup
+                ? `${daysToOpen} días para afilar narrativa y evidencia antes de que abra la convocatoria.`
+                : "Tu perfil en el Radar es la primera lectura que hace el jurado. Empieza por ahí."}
+            </p>
+          </div>
+
+          <div className="award-status__steps">
+            <span className="is-ready">Perfil</span>
+            <span>Video</span>
+            <span>Aplicación</span>
+          </div>
+        </aside>
+
+        <div className="award-facts" data-award-hero data-award-stagger>
+          {HERO_FACTS.map(fact => (
+            <article key={fact.label} data-award-item>
+              <span>{fact.label}</span>
+              <strong>{fact.value}</strong>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="award-marquee" aria-hidden="true">
+        <div className="award-marquee__track">
+          {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, index) => (
+            <span key={`${item}-${index}`}>{item}</span>
+          ))}
+        </div>
+      </section>
+
+      <section id="ruta" className="award-section award-section--route" data-award-route data-award-reveal>
+        <div className="award-section__head">
+          <span className="award-kicker">La ruta</span>
+          <h2>Del perfil al premio.</h2>
+          <p>Cinco hitos. Cada uno con una entrega concreta y una fecha que no se mueve.</p>
+          <div className="award-route-progress" aria-hidden="true">
+            <span />
+            <div>
+              {ROUTE_CARDS.map(card => (
+                <i key={card.num} data-award-route-dot />
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="award-rail" data-award-rail data-award-stagger aria-label="Etapas del Premio Natura500" tabIndex={0}>
+          {ROUTE_CARDS.map(card => (
+            <article key={card.num} className="award-route-card" style={{ "--route-accent": card.accent } as CssVars} data-award-item>
+              <div className="award-route-card__image">
+                <Image src={card.image} alt="" fill sizes="(max-width: 900px) 86vw, 34vw" />
+              </div>
+              <div className="award-route-card__meta">
+                <span className="award-route-card__num">{card.num}</span>
+                <small>{card.date}</small>
+              </div>
+              <strong>{card.title}</strong>
+              <p>{card.desc}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="award-levels" data-award-levels>
+        <div className="award-levels__intro">
+          <span className="award-kicker">El premio</span>
+          <h2 data-award-level-title>Participas desde tu etapa, no desde tu tamaño.</h2>
+        </div>
+        <div className="award-levels__grid">
+          {PRIZE_LEVELS.map((level, index) => (
+            <article key={level.id} className="award-level" style={{ "--level-tone": level.tone } as CssVars} data-award-level-card>
+              <span>00{index + 1} · {level.label}</span>
+              <strong>{level.amount}</strong>
+              <h3>{level.name}</h3>
+              <p>{level.desc}</p>
+              <small>{level.stage}</small>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section id="cronograma" className="award-timeline" data-award-reveal>
+        <div className="award-timeline__intro">
+          <span className="award-kicker">Calendario</span>
+          <h2>Fechas firmes, siguiente paso claro.</h2>
+          <p>Ocho momentos del proceso. Cada uno con una entrega que ya puedes empezar a preparar.</p>
+          <div className="award-calendar-visual" aria-hidden="true">
+            <svg viewBox="0 0 64 64" role="img">
+              <rect x="9" y="12" width="46" height="42" rx="8" />
+              <path d="M9 24h46" />
+              <path d="M22 8v10M42 8v10" />
+              <circle cx="22" cy="34" r="3" />
+              <circle cx="32" cy="34" r="3" />
+              <circle cx="42" cy="34" r="3" />
+              <circle cx="22" cy="44" r="3" />
+              <circle cx="32" cy="44" r="3" />
+            </svg>
+            <div>
+              <span>22</span>
+              <strong>MAY 2026</strong>
+              <small>Apertura de convocatoria</small>
+            </div>
+          </div>
+        </div>
+        <ol className="award-timeline__list" data-award-stagger>
+          {TIMELINE.map((step, index) => (
+            <li key={step.title} className={`is-${step.state}`} data-award-item>
+              <span className="award-timeline__dot" />
+              <small>{String(index + 1).padStart(2, "0")} · {step.date}</small>
+              <strong>{step.title}</strong>
+              <p>{step.desc}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="award-selection" data-award-reveal>
+        <div className="award-selection__copy">
+          <span className="award-kicker">Lente del jurado</span>
+          <h2>Qué busca una candidatura fuerte.</h2>
+          <p>Cinco preguntas que orientan al jurado y a las candidatas. Si las respondes con evidencia, ya estás cerca.</p>
+          <div className="award-questions" data-award-stagger>
+            {SELECTION_QUESTIONS.map((question, index) => (
+              <article key={question} data-award-item>
+                <span>0{index + 1}</span>
+                <p>{question}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+        <div className="award-collage" aria-hidden="true" data-award-parallax data-speed="-0.035">
+          {COLLAGE_IMAGES.map((src, index) => (
+            <span key={src} className={`award-collage__item award-collage__item--${index + 1}`}>
+              <Image src={src} alt="" fill sizes="(max-width: 900px) 48vw, 260px" />
+            </span>
+          ))}
+        </div>
+      </section>
+
+      <section className="award-evaluation" data-award-reveal>
+        <div className="award-evaluation__main">
+          <span className="award-kicker">Cómo se mide</span>
+          <h2>Criterios clave.</h2>
+          <div className="award-criteria" data-award-stagger>
+            {PRIMARY_CRITERIA.map(criterion => (
+              <article key={criterion.name} style={{ "--criterion-width": `${criterion.weight * 5}%` } as CssVars} data-award-item>
+                <div>
+                  <strong>{criterion.name}</strong>
+                  <span>{criterion.weight}%</span>
+                </div>
+                <em aria-hidden="true"><b data-award-bar /></em>
+                <p>{criterion.desc}</p>
+              </article>
+            ))}
+          </div>
+          <details className="award-more-criteria">
+            <summary>Ver criterios complementarios</summary>
+            <div>
+              {SECONDARY_CRITERIA.map(criterion => (
+                <article key={criterion.name}>
+                  <strong>{criterion.name}</strong>
+                  <span>{criterion.weight}%</span>
+                </article>
+              ))}
+            </div>
+          </details>
+        </div>
+        <aside className="award-benefits" data-award-stagger>
+          <span className="award-kicker">Lo que te llevas</span>
+          <h2>Más que capital.</h2>
+          {BENEFITS.map(benefit => (
+            <article key={benefit.title} data-award-item>
+              <span>{benefit.label}</span>
+              <div>
+                <strong>{benefit.title}</strong>
+                <p>{benefit.desc}</p>
+              </div>
+            </article>
+          ))}
+        </aside>
+      </section>
+
+      <section className="award-eligibility" data-award-reveal>
+        <div>
+          <span className="award-kicker">Quién entra</span>
+          <h2>Diseñado para LAC.</h2>
+          <p>Organizaciones registradas y operando en alguno de los 26 países prestatarios del BID, con base humana y operativa principalmente en la región.</p>
+          <div className="award-notes">
+            <span><strong>50%+</strong> fundación LAC</span>
+            <span><strong>70%+</strong> equipo directivo en LAC</span>
+            <span>Equidad de género como criterio activo</span>
+          </div>
+        </div>
+        <div className="award-types" data-award-stagger>
+          {ELIGIBLE_TYPES.map(type => (
+            <article key={type.title} data-award-item>
+              <span>{type.label}</span>
+              <div>
+                <strong>{type.title}</strong>
+                <p>{type.desc}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+        <details className="award-countries-panel">
+          <summary>26 países elegibles</summary>
+          <div className="award-countries" aria-label="Países elegibles">
+            {ELIGIBLE_COUNTRIES.map(country => (
+              <span key={country}>{country}</span>
+            ))}
+          </div>
+        </details>
+      </section>
+
+      <footer className="award-footer" data-award-reveal>
+        <p><strong>Natura500</strong> es una línea de acción de NaturaTech LAC para escalar la infraestructura del ecosistema regenerativo de LAC.</p>
+        <div>
+          <span>BID Lab</span>
+          <span>C Minds</span>
+          <span>Asdi</span>
+          <span>Climate Collective</span>
+          <span>Amazonía Siempre</span>
+        </div>
+      </footer>
     </main>
   );
 }

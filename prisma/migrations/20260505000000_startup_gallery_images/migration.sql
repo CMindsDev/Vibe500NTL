@@ -1,0 +1,3 @@
+ALTER TABLE "Startup"
+ADD COLUMN "image3" TEXT,
+ADD COLUMN "image4" TEXT;
